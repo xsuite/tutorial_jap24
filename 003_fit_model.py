@@ -44,22 +44,32 @@ tw_inj = line.twiss(
     x=line['x_inj'], px=line['px_inj'],
     delta=line['delta_inj'], zeta=line['zeta_inj'])
 
-class ActionTrajectory(xt.Action):
+# class ActionTrajectory(xt.Action):
 
-    def run(self):
-        tw = line.twiss(
-            betx=1, bety=1,
-            x=line['x_inj'], px=line['px_inj'],
-            delta=line['delta_inj'], zeta=line['zeta_inj'])
-        return tw
+#     def run(self):
+#         tw = line.twiss(
+#             betx=1, bety=1,
+#             x=line['x_inj'], px=line['px_inj'],
+#             delta=line['delta_inj'], zeta=line['zeta_inj'])
+#         return tw
 
-action = ActionTrajectory()
+# action = ActionTrajectory()
 
-tw_inj_bpms = tw_inj.rows[bpm_meas['name']]
 
+@xt.Action
+def tw_1st_turn():
+    return line.twiss(
+        betx=1, bety=1,
+        x=line['x_inj'], px=line['px_inj'],
+        delta=line['delta_inj'], zeta=line['zeta_inj'])
+
+# Create a target
+target_bph_63608 = tw_1st_turn.target('x', 1e-3, at='bph.63608')
+
+# Create many targets
 targets = []
 for nn in bpm_meas['name']:
-    targets.append(action.target('x', bpm_meas['x_meas', nn], at=nn))
+    targets.append(tw_1st_turn.target('x', bpm_meas['x_meas', nn], at=nn))
 
 opt = line.match(
     solve=False,
@@ -73,11 +83,14 @@ opt = line.match(
 )
 
 opt.step(10)
+opt.run_simplex(100)
 
 tw_inj_opt = line.twiss(
     betx=1, bety=1,
     x=line['x_inj'], px=line['px_inj'],
     delta=line['delta_inj'], zeta=line['zeta_inj'])
+
+tw_inj_bpms = tw_inj.rows[bpm_meas['name']]
 
 plt.close('all')
 plt.figure(1)
@@ -85,8 +98,13 @@ plt.plot(tw_inj_opt.s, tw_inj_opt.x)
 plt.plot(tw_inj_bpms.s, tw_inj_opt.rows[bpm_meas['name']].x, 'o')
 plt.plot(tw_inj_bpms.s, bpm_meas['x_meas'], 'o')
 
-plt.figure(2)
-plt.plot(tw_inj_bpms.s, tw_inj_opt.rows[bpm_meas['name']].x)
-plt.plot(tw_inj_bpms.s, bpm_meas['x_meas'])
+plt.figure(2, figsize=(12, 4.8))
+plt.plot(tw_inj_bpms.s, tw_inj_opt.rows[bpm_meas['name']].x * 1e3, '.-', label='Xsuite')
+plt.plot(tw_inj_bpms.s, bpm_meas['x_meas'] * 1e3, '.-', label='Measurement')
+plt.legend()
+plt.xlabel('s [m]')
+plt.ylabel('Horizontal position at BPMs [mm]')
+plt.grid(True, alpha=0.4)
+
 
 plt.show()
