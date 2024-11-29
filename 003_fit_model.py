@@ -106,5 +106,4 @@ plt.xlabel('s [m]')
 plt.ylabel('Horizontal position at BPMs [mm]')
 plt.grid(True, alpha=0.4)
 
-
 plt.show()
