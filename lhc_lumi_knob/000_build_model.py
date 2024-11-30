@@ -131,3 +131,5 @@ fp_sep_off.plot(color='C2', alpha=0.5, label='separation off')
 fp_sep_on.plot(color='C3', alpha=1, label='separation on')
 
 plt.show()
+
+lhc.to_json('lhc_bb.json')
