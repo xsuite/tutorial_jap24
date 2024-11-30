@@ -81,4 +81,53 @@ plt.xlabel('s [m]')
 plt.ylabel('x [mm]')
 plt.grid(True, alpha=0.5)
 
+
+lhc['shift_h_ip1.b1'] = 2
+lhc['shift_h_ip1.b2'] = -1
+lhc.install_beambeam_interactions(
+    clockwise_line="b1",
+    anticlockwise_line="b2",
+    ip_names=["ip1", "ip2", "ip5", "ip8"],
+    delay_at_ips_slots=[0, 891, 0, 2670],
+    num_long_range_encounters_per_side={"ip1": 25, "ip2": 20, "ip5": 25, "ip8": 20},
+    num_slices_head_on=11,
+    harmonic_number=35640,
+    bunch_spacing_buckets=10,
+    sigmaz=0.076,
+)
+lhc.build_trackers()
+
+lhc.b2.twiss_default['reverse'] = False # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+lhc.configure_beambeam_interactions(
+    num_particles=1.8e11, nemitt_x=2.e-6, nemitt_y=2.e-6, crab_strong_beam=False
+)
+
+fp_sep_on = lhc.b1.get_footprint(
+    freeze_longitudinal=True,
+    nemitt_x=2.5e-6,
+    nemitt_y=2.5e-6,
+    r_range=(0.1, 5),
+    linear_rescale_on_knobs=[
+        xt.LinearRescale(knob_name="beambeam_scale", v0=0.0, dv=0.1)
+    ],
+)
+
+lhc['shift_h_ip1.b1'] = 0
+lhc['shift_h_ip1.b2'] = 0
+
+fp_sep_off = lhc.b1.get_footprint(
+    freeze_longitudinal=True,
+    nemitt_x=2.5e-6,
+    nemitt_y=2.5e-6,
+    r_range=(0.1, 5),
+    linear_rescale_on_knobs=[
+        xt.LinearRescale(knob_name="beambeam_scale", v0=0.0, dv=0.1)
+    ],
+)
+
+plt.figure()
+fp_sep_off.plot(color='C2', alpha=0.5, label='separation off')
+fp_sep_on.plot(color='C3', alpha=1, label='separation on')
+
 plt.show()
