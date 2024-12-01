@@ -34,10 +34,12 @@ sv2 = lhc.b2.survey().reverse()
 print('Done survey')
 
 
+
+
 # Compute offsets
 # ===============
 
-def offset_elements(line, survey, dir=1):
+def offset_elements(line, survey):
     tt = line.get_table()
     apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
     # aper_idx = np.isin(tt.element_type, apertypes)
@@ -86,7 +88,10 @@ def compute_beam_size(survey, twiss):
 # ==========
 
 def plot_apertures(line, twiss, survey):
-    aper_idx = offset_elements(line, survey, dir=1 if 'b1' in line.name else -1)
+    tt = line.get_table()
+    apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
+    # aper_idx = np.isin(tt.element_type, apertypes)
+    aper_idx = np.where([tt['element_type', nn] in apertypes for nn in survey.name])[0]
 
     tw_ap = twiss.rows[aper_idx]
     sv_ap = survey.rows[aper_idx]
@@ -108,6 +113,9 @@ def plot_beam_size(twiss, survey, color):
 lhc.build_trackers()
 
 plt.close('all')
+
+offset_elements(lhc.b1, sv1)
+offset_elements(lhc.b2, sv2)
 
 plot_apertures(lhc.b1, tw1_thin, sv1)
 plot_apertures(lhc.b2, tw2_thin, sv2)
