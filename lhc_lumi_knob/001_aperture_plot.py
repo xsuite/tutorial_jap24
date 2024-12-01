@@ -98,12 +98,17 @@ def offset_elements(line, survey, dir=1):
     tt = line.get_table()
     apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
     # aper_idx = np.isin(tt.element_type, apertypes)
-    aper_idx = np.array([tt['element_type', nn] in apertypes for nn in survey.name])
-    for nn in survey.rows[aper_idx].name:
+    aper_idx = np.where([tt['element_type', nn] in apertypes for nn in survey.name])[0]
+    mech_sep_arr = survey.s * 0 + np.nan
+    for ii in aper_idx:
+        nn = survey.name[ii]
         el = line[nn]
         mech_sep = el.extra['mech_sep'] # * dir
         x = survey['X', nn]
         el.shift_x = mech_sep / 2 - x
+
+        mech_sep_arr[ii] = mech_sep
+    survey['mech_sep'] = mech_sep_arr
 
     return aper_idx
 
