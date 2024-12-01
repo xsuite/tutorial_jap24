@@ -2,7 +2,7 @@ import xtrack as xt
 import numpy as np
 import matplotlib.pyplot as plt
 
-from build_lines_with_apertures import ApertureModel
+from lhc_aperture_model import LhcApertureModel
 
 lhc = xt.Multiline.from_json('lhc_bb.json')
 
@@ -12,7 +12,7 @@ lhc['shift_h_ip1.b2'] = -1
 
 lhc['beambeam_scale'] = 0.
 
-aper_model = ApertureModel(lhc=lhc,
+aper_model = LhcApertureModel(lhc=lhc,
                            aperture_file_path='APERTURE_EYETS 2023-2024.seq')
 
 plt.close('all')

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class ApertureModel:
+class LhcApertureModel:
 
     def __init__(self, lhc, aperture_file_path,
                  cycle_to='ip5'):
