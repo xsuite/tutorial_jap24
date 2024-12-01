@@ -4,7 +4,8 @@ import numpy as np
 
 class ApertureModel:
 
-    def __init__(self, lhc, aperture_file_path):
+    def __init__(self, lhc, aperture_file_path,
+                 cycle_to='ip5'):
         self.lhc = lhc
         self.aperture_file_path = aperture_file_path
 
@@ -19,6 +20,9 @@ class ApertureModel:
 
         build_lines_with_apertures(self.lhcb1_aper, self.lhcb2_aper,
                                    self.aperture_file_path)
+
+        self.lhcb1_aper.cycle(cycle_to)
+        self.lhcb2_aper.cycle(cycle_to)
 
         # Go to mid beam reference frame (straight)
         arc_vars = [f'ab.a{ab}' for ab in ['12', '23', '34', '45', '56', '67', '78', '81']]
