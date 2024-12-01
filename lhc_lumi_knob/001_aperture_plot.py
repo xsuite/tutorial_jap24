@@ -2,7 +2,7 @@ import xtrack as xt
 import numpy as np
 import matplotlib.pyplot as plt
 
-from build_lines_with_apertures import build_lines_with_apertures
+from build_lines_with_apertures import ApertureModel
 
 lhc = xt.Multiline.from_json('lhc_bb.json')
 
@@ -12,26 +12,14 @@ lhc['shift_h_ip1.b2'] = -1
 
 lhc['beambeam_scale'] = 0.
 
-build_lines_with_apertures(lhc, 'APERTURE_EYETS 2023-2024.seq')
-
-lhc.b1.cycle('ip5')
-lhc.b2.cycle('ip5')
-
-arc_vars = [f'ab.a{ab}' for ab in ['12', '23', '34', '45', '56', '67', '78', '81']]
-old_vars = {}
-for var in arc_vars:
-    old_vars[var] = lhc.vars[var]
-    lhc.vars[var] = 0
+aper_model = ApertureModel(lhc=lhc, aperture_file_path='APERTURE_EYETS 2023-2024.seq')
 
 print('Start twiss')
-tw1_thin = lhc.b1.twiss4d()
-tw2_thin = lhc.b2.twiss4d(reverse=True)
+tw1_aper = aper_model.lhcb1_aper.twiss4d()
+tw2_aper = aper_model.lhcb2_aper.twiss4d(reverse=True)
 print('Done twiss')
 
-print('Start survey')
-sv1 = lhc.b1.survey()
-sv2 = lhc.b2.survey().reverse()
-print('Done survey')
+
 
 
 
@@ -39,23 +27,7 @@ print('Done survey')
 # Compute offsets
 # ===============
 
-def offset_elements(line, survey):
-    tt = line.get_table()
-    apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
-    # aper_idx = np.isin(tt.element_type, apertypes)
-    aper_idx = np.where([tt['element_type', nn] in apertypes for nn in survey.name])[0]
-    mech_sep_arr = survey.s * 0 + np.nan
-    for ii in aper_idx:
-        nn = survey.name[ii]
-        el = line[nn]
-        mech_sep = el.extra['mech_sep'] # * dir
-        x = survey['X', nn]
-        el.shift_x = mech_sep / 2 - x
 
-        mech_sep_arr[ii] = mech_sep
-    survey['mech_sep'] = mech_sep_arr
-
-    return aper_idx
 
 # Convenience function to compute aperture size and beam sizes
 # ============================================================
@@ -90,7 +62,6 @@ def compute_beam_size(survey, twiss):
 def plot_apertures(line, twiss, survey):
     tt = line.get_table()
     apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
-    # aper_idx = np.isin(tt.element_type, apertypes)
     aper_idx = np.where([tt['element_type', nn] in apertypes for nn in survey.name])[0]
 
     tw_ap = twiss.rows[aper_idx]
@@ -114,13 +85,10 @@ lhc.build_trackers()
 
 plt.close('all')
 
-offset_elements(lhc.b1, sv1)
-offset_elements(lhc.b2, sv2)
+plot_apertures(aper_model.lhcb1_aper, tw1_aper, aper_model.survey_b1)
+plot_apertures(aper_model.lhcb2_aper, tw2_aper, aper_model.survey_b2)
 
-plot_apertures(lhc.b1, tw1_thin, sv1)
-plot_apertures(lhc.b2, tw2_thin, sv2)
-
-plot_beam_size(tw1_thin, sv1, color='b')
-plot_beam_size(tw2_thin, sv2, color='r')
+plot_beam_size(tw1_aper, aper_model.survey_b1, color='b')
+plot_beam_size(tw2_aper, aper_model.survey_b2, color='r')
 
 plt.show()
