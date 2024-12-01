@@ -23,7 +23,9 @@ aper_loader = xt.mad_parser.loader.MadxLoader(env=aper_env, reverse_lines=['lhcb
 builders = aper_loader.load_string(input_string, build=False)
 builder_ap1, builder_ap2 = builders
 
-def aperture_line(line, builder):
+
+
+def aperture_line(line, builder, table_s):
     # The aperture file expects there to already be some markers in the line,
     # so we add them here.
     # print(f'Building aperture-only version of {line.name}')
@@ -31,28 +33,43 @@ def aperture_line(line, builder):
     relational_markers = set(p.from_ for p in builder.components)
 
     for ip in relational_markers:
-        if ip.endswith('_reversed'):
-            ip = ip.replace('_reversed', '')
-        builder.new(ip, 'marker', at=line.get_table().rows[ip].s[0])
+        # PATCH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if '_reversed' in ip:
+            ip_ap = ip
+            ip_line = ip.replace('_reversed', '')
+        else:
+            ip_ap = ip
+            ip_line = ip
+        builder.new(ip_ap, 'marker', at=table_s['s', ip_line])
+        # builder.new(ip, 'marker', at=line.get_table().rows[ip].s[0])
 
     return builder.build()
 
 lhc.b1.cycle('ip1')
 lhc.b2.cycle('ip1')
-line_aper1 = aperture_line(lhc.b1, builder_ap1)
-line_aper2 = aperture_line(lhc.b2, builder_ap2)
+table_s_b1 = lhc.b1.twiss4d(betx=1, bety=1, x=0, y=0, px=0, py=0).rows['ip.*'].cols['s']
+table_s_b2 = lhc.b2.twiss4d(betx=1, bety=1, x=0, y=0, px=0, py=0).rows['ip.*'].cols['s']
 
-def insert_apertures(line, apertures):
+circum_b2 = lhc.b2.get_length()
+for nn in table_s_b2.name:
+    table_s_b2['s', nn] = circum_b2 - table_s_b2['s', nn]
+table_s_b2['ip1.l1'] = circum_b2
+
+line_aper1 = aperture_line(lhc.b1, builder_ap1, table_s_b1)
+line_aper2 = aperture_line(lhc.b2, builder_ap2, table_s_b2)
+
+def insert_apertures(line, line_aper):
     print(f'Inserting apertures into {line.name}')
-    tt = apertures.get_table()
-    apertures = tt.rows[tt.element_type != 'Marker']
-    apertures = apertures.rows[apertures.element_type != 'Drift']
+    tt = line_aper.get_table()
+    tt_apertures = tt.rows[tt.element_type != 'Marker']
+    tt_apertures = tt_apertures.rows[tt_apertures.element_type != 'Drift']
 
     line._insert_thin_elements_at_s(elements_to_insert=[
-        (row.s, [(row.name, apertures[row.name])]) for row in apertures.cols['name', 's'].rows
-        if not row.name == '_end_point'
+        (tt_apertures['s', nn], [(nn, line_aper[nn])]) for nn in tt_apertures.name
+        if not nn == '_end_point'
     ])
 
+lhc.discard_trackers()
 insert_apertures(lhc.b1, line_aper1)
 insert_apertures(lhc.b2, line_aper2)
 
