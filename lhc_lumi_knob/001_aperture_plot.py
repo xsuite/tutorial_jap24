@@ -77,8 +77,8 @@ lhc.discard_trackers()
 insert_apertures(lhc.b1, line_aper1)
 insert_apertures(lhc.b2, line_aper2, reverse=True)
 
-# lhc.b1.cycle('ip5')
-# lhc.b2.cycle('ip5')
+lhc.b1.cycle('ip5')
+lhc.b2.cycle('ip5')
 
 
 arc_vars = [f'ab.a{ab}' for ab in ['12', '23', '34', '45', '56', '67', '78', '81']]
@@ -160,7 +160,7 @@ def plot_apertures(line, twiss, survey):
     upper = ap_offset + ap_extent[:, 0] + sv_ap.X
     lower = ap_offset + ap_extent[:, 1] + sv_ap.X
 
-    plt.fill_between(tw_ap.s, upper, lower, alpha=0.5, color="k")
+    plt.fill_between(tw_ap.s, upper, lower, alpha=1., color='lightgrey')
     plt.plot(tw_ap.s, upper, color="k")
     plt.plot(tw_ap.s, lower, color="k")
 
