@@ -1,5 +1,6 @@
 import xtrack as xt
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class ApertureModel:
@@ -42,6 +43,27 @@ class ApertureModel:
         # Offset apertures
         offset_elements(self.lhcb1_aper, self.survey_b1)
         offset_elements(self.lhcb2_aper, self.survey_b2)
+
+    def plot_horizontal_aperture_and_beam_envelopes(self, zero_at=None):
+
+        if zero_at is not None:
+            s_zero = self.survey_b1['s', zero_at]
+        else:
+            s_zero = 0
+
+        print('Start twiss')
+        tw1_aper = self.lhcb1_aper.twiss4d()
+        tw2_aper = self.lhcb2_aper.twiss4d(reverse=True)
+        print('Done twiss')
+        plot_horizontal_apertures(self.lhcb1_aper, tw1_aper, self.survey_b1, s_zero=s_zero)
+        plot_horizontal_apertures(self.lhcb2_aper, tw2_aper, self.survey_b2, s_zero=s_zero)
+
+        plot_horizontal_beam_size(tw1_aper, self.survey_b1, color='b', s_zero=s_zero)
+        plot_horizontal_beam_size(tw2_aper, self.survey_b2, color='r', s_zero=s_zero)
+
+        plt.xlabel('s [m]')
+        plt.ylabel('x [m]')
+
 
 
 def build_lines_with_apertures(lhcb1, lhcb2, aper_file_path):
@@ -128,3 +150,56 @@ def offset_elements(line, survey):
     survey['mech_sep'] = mech_sep_arr
 
     return aper_idx
+
+
+
+# Convenience function to compute aperture size and beam sizes
+# ============================================================
+
+def get_horizontal_aperture_size(el):
+    if hasattr(el, 'min_x'):
+        return el.min_x, el.max_x
+    if hasattr(el, 'max_x'):
+        return -el.max_x, el.max_x
+    return -el.a, el.a
+
+
+def compute_horizontal_beam_size(survey, twiss, nemitt_x=2.5e-6, sigma_delta=8e-4):
+    sx = survey.X
+    s = survey.s
+    x = twiss.x
+    bx = twiss.betx
+    dx = twiss.dx
+    nemitt_x = 2.5e-6
+    gamma0 = twiss.gamma0
+    n_sigmas = 13.
+    sigma_delta = 8e-4
+    # sigx = 13 * np.sqrt(2.5e-6 / 450 * 0.938 * bx) + abs(dx) * 8e-4
+    sigx = n_sigmas * np.sqrt(nemitt_x / gamma0 * bx) + abs(dx) * sigma_delta
+
+    return s, sx, x, sigx
+
+
+# Make plots
+# ==========
+
+def plot_horizontal_apertures(line, twiss, survey, s_zero=0):
+    tt = line.get_table()
+    apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
+    aper_idx = np.where([tt['element_type', nn] in apertypes for nn in survey.name])[0]
+
+    tw_ap = twiss.rows[aper_idx]
+    sv_ap = survey.rows[aper_idx]
+    ap_extent = np.array([get_horizontal_aperture_size(line[nn]) for nn in tw_ap.name])
+    ap_offset = np.array([line[nn].shift_x for nn in tw_ap.name])
+
+    upper = ap_offset + ap_extent[:, 0] + sv_ap.X
+    lower = ap_offset + ap_extent[:, 1] + sv_ap.X
+
+    plt.fill_between(tw_ap.s - s_zero, upper, lower, alpha=1., color='lightgrey')
+    plt.plot(sv_ap.s - s_zero, upper, color="k")
+    plt.plot(sv_ap.s - s_zero, lower, color="k")
+
+def plot_horizontal_beam_size(twiss, survey, color, s_zero=0):
+    s, sx, x, sigx = compute_horizontal_beam_size(survey, twiss)
+    plt.fill_between(s - s_zero, x - sigx + sx, x + sigx + sx, alpha=0.5, color=color)
