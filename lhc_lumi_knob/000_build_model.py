@@ -14,7 +14,7 @@ lhc.b2.particle_ref = particle_ref
 lhc.b1.cycle('ip7')
 lhc.b2.cycle('ip7')
 
-lhc.b2.twiss_default['reverse'] = True
+
 
 # Load optics
 lhc.vars.load_madx(
