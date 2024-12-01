@@ -39,15 +39,17 @@ def aperture_line(builder, table_s_ref):
 
 lhc.b1.cycle('ip1')
 lhc.b2.cycle('ip1')
-table_s_b1 = lhc.b1.twiss4d(betx=1, bety=1, x=0, y=0, px=0, py=0).rows['ip.*'].cols['s']
-table_s_b2 = lhc.b2.twiss4d(betx=1, bety=1, x=0, y=0, px=0, py=0).rows['ip.*'].cols['s']
+table_s_b1 = lhc.b1.get_table().rows['ip.*'].cols['s']
+table_s_b2 = lhc.b2.get_table().rows['ip.*'].cols['s']
 
 circum_b2 = lhc.b2.get_length()
-for nn in table_s_b2.name:
-    table_s_b2['s', nn] = circum_b2 - table_s_b2['s', nn]
+table_s_b2['s'] = circum_b2 - table_s_b2['s']
 
+# PATCH !!!!!!!!!!!!!!!!!!!
 ind_patch = table_s_b2.rows.indices['ip1.l1'][0]
 table_s_b2.s[ind_patch] = circum_b2
+ind_patch = table_s_b2.rows.indices['ip1'][0]
+table_s_b2.s[ind_patch] = 0
 
 line_aper1 = aperture_line(builder_ap1, table_s_b1)
 line_aper2 = aperture_line(builder_ap2, table_s_b2)
@@ -55,6 +57,7 @@ line_aper2 = aperture_line(builder_ap2, table_s_b2)
 def insert_apertures(line, line_aper, reverse=False):
     print(f'Inserting apertures into {line.name}')
     tt = line_aper.get_table()
+    breakpoint()
     tt_apertures = tt.rows[tt.element_type != 'Marker']
     tt_apertures = tt_apertures.rows[tt_apertures.element_type != 'Drift']
 
@@ -66,6 +69,7 @@ def insert_apertures(line, line_aper, reverse=False):
         if not nn == '_end_point'
     ])
 
+lhc.build_trackers() # To resolve parents
 lhc.discard_trackers()
 insert_apertures(lhc.b1, line_aper1)
 insert_apertures(lhc.b2, line_aper2, reverse=True)
@@ -157,6 +161,8 @@ def plot_apertures(line, twiss, survey):
 def plot_beam_size(twiss, survey, color):
     s, sx, x, sigx = compute_beam_size(survey, twiss)
     plt.fill_between(s, x - sigx + sx, x + sigx + sx, alpha=0.5, color=color)
+
+lhc.build_trackers()
 
 plt.close('all')
 
