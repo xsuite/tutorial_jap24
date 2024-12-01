@@ -57,7 +57,6 @@ line_aper2 = aperture_line(builder_ap2, table_s_b2)
 def insert_apertures(line, line_aper, reverse=False):
     print(f'Inserting apertures into {line.name}')
     tt = line_aper.get_table()
-    breakpoint()
     tt_apertures = tt.rows[tt.element_type != 'Marker']
     tt_apertures = tt_apertures.rows[tt_apertures.element_type != 'Drift']
 
@@ -133,7 +132,12 @@ def compute_beam_size(survey, twiss):
     x = twiss.x
     bx = twiss.betx
     dx = twiss.dx
-    sigx = 13 * np.sqrt(2.5e-6 / 450 * 0.938 * bx) + abs(dx) * 8e-4
+    nemitt_x = 2.5e-6
+    gamma0 = twiss.gamma0
+    n_sigmas = 13.
+    sigma_delta = 8e-4
+    # sigx = 13 * np.sqrt(2.5e-6 / 450 * 0.938 * bx) + abs(dx) * 8e-4
+    sigx = n_sigmas * np.sqrt(nemitt_x / gamma0 * bx) + abs(dx) * sigma_delta
 
     return s, sx, x, sigx
 
@@ -142,7 +146,6 @@ def compute_beam_size(survey, twiss):
 # ==========
 
 def plot_apertures(line, twiss, survey):
-    breakpoint()
     aper_idx = offset_elements(line, survey, dir=1 if 'b1' in line.name else -1)
 
     tw_ap = twiss.rows[aper_idx]
