@@ -24,12 +24,12 @@ lhc['on_disp'] = 1.
 lhc['on_xx1_v'] = 160.0
 lhc['on_x1_v'] = 160.0
 lhc['on_sep1_h'] = 0.
-lhc['on_sep2h'] = -1.0
+lhc['on_sep2h'] = 5 #-1.0
 lhc['on_x2v'] = 200.0
 lhc['on_xx5_h'] = 160.0
 lhc['on_x5_h'] = 160.0
 lhc['on_sep5_v'] = 0.
-lhc['on_sep8h'] = -1.0
+lhc['on_sep8h'] = 5 # -1.0
 lhc['on_x8v'] = 200.0
 
 twb1 = lhc.b1.twiss4d()
@@ -82,8 +82,8 @@ plt.ylabel('x [mm]')
 plt.grid(True, alpha=0.5)
 
 
-lhc['shift_h_ip1.b1'] = 2
-lhc['shift_h_ip1.b2'] = -1
+lhc['shift_h_ip1.b1'] = 5#2
+lhc['shift_h_ip1.b2'] = 5#-1
 lhc.install_beambeam_interactions(
     clockwise_line="b1",
     anticlockwise_line="b2",
