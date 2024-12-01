@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 
 lhc = xt.Multiline.from_json('lhc_bb.json')
 
+lhc['shift_h_ip1.b1'] = 2
+lhc['shift_h_ip1.b2'] = -1
+
+
 lhc['beambeam_scale'] = 0.
 
 lhc_sequences = '''
