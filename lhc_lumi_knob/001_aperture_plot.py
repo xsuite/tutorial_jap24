@@ -101,7 +101,7 @@ def offset_elements(line, survey, dir=1):
     aper_idx = np.array([tt['element_type', nn] in apertypes for nn in survey.name])
     for nn in survey.rows[aper_idx].name:
         el = line[nn]
-        mech_sep = el.extra['mech_sep'] * dir
+        mech_sep = el.extra['mech_sep'] # * dir
         x = survey['X', nn]
         el.shift_x = mech_sep / 2 - x
 
