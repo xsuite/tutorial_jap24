@@ -82,12 +82,12 @@ for var in arc_vars:
 
 print('Start twiss')
 tw1_thin = lhc.b1.twiss4d()
-tw2_thin = lhc.b2.twiss4d()
+tw2_thin = lhc.b2.twiss4d(reverse=True)
 print('Done twiss')
 
 print('Start survey')
 sv1 = lhc.b1.survey()
-sv2 = lhc.b2.survey()
+sv2 = lhc.b2.survey().reverse()
 print('Done survey')
 
 
@@ -97,8 +97,9 @@ print('Done survey')
 def offset_elements(line, survey, dir=1):
     tt = line.get_table()
     apertypes = ['LimitEllipse', 'LimitRect', 'LimitRectEllipse', 'LimitRacetrack']
-    aper_idx = np.isin(tt.element_type, apertypes)
-    for nn in tt.rows[aper_idx].name:
+    # aper_idx = np.isin(tt.element_type, apertypes)
+    aper_idx = np.array([tt['element_type', nn] in apertypes for nn in survey.name])
+    for nn in survey.rows[aper_idx].name:
         el = line[nn]
         mech_sep = el.extra['mech_sep'] * dir
         x = survey['X', nn]
@@ -132,7 +133,8 @@ def compute_beam_size(survey, twiss):
 # ==========
 
 def plot_apertures(line, twiss, survey):
-    aper_idx = offset_elements(line, survey, dir=1 if line.name == 'lhcb1' else -1)
+    breakpoint()
+    aper_idx = offset_elements(line, survey, dir=1 if 'b1' in line.name else -1)
 
     tw_ap = twiss.rows[aper_idx]
     sv_ap = survey.rows[aper_idx]
