@@ -14,8 +14,6 @@ lhc.b2.particle_ref = particle_ref
 lhc.b1.cycle('ip7')
 lhc.b2.cycle('ip7')
 
-
-
 # Load optics
 lhc.vars.load_madx(
     "../../acc-models-lhc/strengths/ATS_Nominal/2024/ats_30cm.madx")
